@@ -1,16 +1,17 @@
 import pymongo
 
-__author__ = 'jslvtr'
+__author__ = 'padickinson'
 
 
 class Database(object):
-    URI = "mongodb://127.0.0.1:27017"
+    # static class properties
+    URI = 'mongodb://127.0.0.1:27017'
     DATABASE = None
 
     @staticmethod
     def initialize():
         client = pymongo.MongoClient(Database.URI)
-        Database.DATABASE = client['fullstack']
+        Database.DATABASE = client['price_of_chair_web']
 
     @staticmethod
     def insert(collection, data):
@@ -26,8 +27,12 @@ class Database(object):
 
     @staticmethod
     def update(collection, query, data):
-        Database.DATABASE[collection].update(query, data, upsert=True)
+        Database.DATABASE[collection].update(query,data,upsert=True)
+
+    @staticmethod
+    def delete_one(collection,query):
+        Database.DATABASE[collection].delete_one(query)
 
     @staticmethod
     def remove(collection, query):
-        return Database.DATABASE[collection].remove(query)
+        Database.DATABASE[collection].remove(query)

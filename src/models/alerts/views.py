@@ -1,74 +1,77 @@
-from flask import Blueprint, request, render_template, session, redirect, url_for
+from flask import Blueprint
+import uuid
+
+from flask import render_template, request, session, url_for
+from werkzeug.utils import redirect
 
 from src.models.alerts.alert import Alert
 from src.models.items.item import Item
 import src.models.users.decorators as user_decorators
 
-__author__ = 'jslvtr'
-
 alert_blueprint = Blueprint('alerts', __name__)
 
 
+
 @alert_blueprint.route('/new', methods=['GET', 'POST'])
-@user_decorators.requires_login
+@user_decorators.requires_login  # redirect the user to users/login if they aren't logged in.
 def create_alert():
     if request.method == 'POST':
         name = request.form['name']
         url = request.form['url']
         price_limit = float(request.form['price_limit'])
-
         item = Item(name, url)
         item.save_to_mongo()
+        alert = Alert(session['user_id'], price_limit, item._id)
+        alert.do_price_check()  # saves to mongodb.
+        return redirect(url_for('users.user_alerts'))
 
-        alert = Alert(session['email'], price_limit, item._id)
-        alert.load_item_price()  # This already saves to MongoDB
-
-    # What happens if it's a GET request
-    return render_template("alerts/new_alert.jinja2")  # Send the user an error if their login was invalid
-
+    return render_template('alerts/new_alert.jinja2')  # Send the user an error if invalid login
 
 @alert_blueprint.route('/edit/<string:alert_id>', methods=['GET', 'POST'])
-@user_decorators.requires_login
+@user_decorators.requires_login  # redirect the user to users/login if they aren't logged in.
 def edit_alert(alert_id):
+    alert=Alert.get_by_id(uuid.UUID(alert_id))
     if request.method == 'POST':
-        price_limit = float(request.form['price_limit'])
+        alert.price_limit = float(request.form['price_limit'])
+        alert.do_price_check()  # saves to mongodb.
+        return redirect(url_for('users.user_alerts'))
 
-        alert = Alert.find_by_id(alert_id)
-        alert.price_limit = price_limit
-        alert.load_item_price()  # This already saves to MongoDB
+    return render_template('alerts/edit_alert.jinja2',alert=alert)  # Send the user an error if invalid login
 
-    # What happens if it's a GET request
-    return render_template("alerts/edit_alert.jinja2", alert=Alert.find_by_id(alert_id))  # Send the user an error if their login was invalid
+
 
 
 @alert_blueprint.route('/deactivate/<string:alert_id>')
-@user_decorators.requires_login
 def deactivate_alert(alert_id):
-    Alert.find_by_id(alert_id).deactivate()
+    Alert.get_by_id(uuid.UUID(alert_id)).deactivate()
     return redirect(url_for('users.user_alerts'))
 
 
 @alert_blueprint.route('/activate/<string:alert_id>')
-@user_decorators.requires_login
 def activate_alert(alert_id):
-    Alert.find_by_id(alert_id).activate()
+    Alert.get_by_id(uuid.UUID(alert_id)).activate()
     return redirect(url_for('users.user_alerts'))
 
 
 @alert_blueprint.route('/delete/<string:alert_id>')
-@user_decorators.requires_login
 def delete_alert(alert_id):
-    Alert.find_by_id(alert_id).delete()
+    Alert.get_by_id(uuid.UUID(alert_id)).delete_from_db()
     return redirect(url_for('users.user_alerts'))
+
 
 
 @alert_blueprint.route('/<string:alert_id>')
 @user_decorators.requires_login
 def get_alert_page(alert_id):
-    return render_template('alerts/alert.jinja2', alert=Alert.find_by_id(alert_id))
+    alert = Alert.get_by_id(uuid.UUID(alert_id))
+    return render_template('alerts/alert.jinja2', alert=alert)
 
+
+@alert_blueprint.route('/for_user/<string:user_id>')
+def get_alerts_for_user(user_id):
+    pass
 
 @alert_blueprint.route('/check_price/<string:alert_id>')
-def check_alert_price(alert_id):
-    Alert.find_by_id(alert_id).load_item_price()
+def check_price(alert_id):
+    Alert.get_by_id(uuid.UUID(alert_id)).do_price_check()
     return redirect(url_for('.get_alert_page', alert_id=alert_id))

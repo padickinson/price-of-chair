@@ -1,9 +1,7 @@
 import uuid
-from src.common.database import Database
 import src.models.stores.constants as StoreConstants
 import src.models.stores.errors as StoreErrors
-
-__author__ = 'jslvtr'
+from src.common.database import Database
 
 
 class Store(object):
@@ -19,45 +17,54 @@ class Store(object):
 
     def json(self):
         return {
-            "_id": self._id,
-            "name": self.name,
-            "url_prefix": self.url_prefix,
-            "tag_name": self.tag_name,
-            "query": self.query
+            "name":self.name,
+            "url_prefix":self.url_prefix,
+            "tag_name":self.tag_name,
+            "query":self.query,
+            "_id":self._id
         }
 
-    def delete(self):
-        Database.remove(StoreConstants.COLLECTION, {'_id': self._id})
-
-    @classmethod
-    def all(cls):
-        return [cls(**elem) for elem in Database.find(StoreConstants.COLLECTION, {})]
-
-    @classmethod
-    def get_by_id(cls, id):
-        return cls(**Database.find_one(StoreConstants.COLLECTION, {"_id": id}))
-
     def save_to_mongo(self):
-        Database.update(StoreConstants.COLLECTION, {'_id': self._id}, self.json())
+        Database.update(StoreConstants.COLLECTION, {"_id": self._id}, self.json())
+        #Database.insert(StoreConstants.COLLECTION, self.json())
 
     @classmethod
-    def get_by_name(cls, store_name):
-        return cls(**Database.find_one(StoreConstants.COLLECTION, {"name": store_name}))
+    def get_by_id(cls,id):
+        return cls(**Database.find_one(StoreConstants.COLLECTION,{"_id":id}))
+
+
+    @classmethod
+    def get_by_name(cls,name):
+        return cls(**Database.find_one(StoreConstants.COLLECTION,{"name":name}))
+
+    @classmethod
+    def get_store_list(cls):
+        return [cls(**store) for store in Database.find(StoreConstants.COLLECTION,{})]
 
     @classmethod
     def get_by_url_prefix(cls, url_prefix):
-        return cls(**Database.find_one(StoreConstants.COLLECTION, {"url_prefix": {"$regex": '^{}'.format(url_prefix)}}))
+        try:
+            result = Database.find_one(
+                StoreConstants.COLLECTION, {"url_prefix": {"$regex":'^{}'.format(url_prefix)}})
+            store = cls(**result)
+            if store is not None:
+                return store
+        except Exception as e:
+            return None
 
     @classmethod
-    def find_by_url(cls, url):
+    def find_by_url(cls,url):
         """
-        Return a store from a url like "http://www.johnlewis.com/item/sdfj4h5g4g21k.html"
-        :param url: The item's URL
-        :return: a Store, or raises a StoreNotFoundException if no store matches the URL
+        return a store from a URL like https://www.amazon.com/Amazon-Echo-Bluetooth-Speaker-with-WiFi-Alexa/dp/B00X4WHP5E
+        :param url:
+        :return: matvhing store, or raises StoreNotFoundError if no store.
         """
-        for i in range(0, len(url)+1):
-            try:
-                store = cls.get_by_url_prefix(url[:i])
+        for i in range(len(url)+1):
+            store = cls.get_by_url_prefix(url[:len(url)-i])
+            if store is not None:
                 return store
-            except:
-                raise StoreErrors.StoreNotFoundException("The URL Prefix used to find the store didn't give us any results!")
+
+        raise StoreErrors.StoreNotFoundError("No store found for url {}".format(url))
+
+    def delete(self):
+        Database.delete_one(StoreConstants.COLLECTION,{"_id":self._id})

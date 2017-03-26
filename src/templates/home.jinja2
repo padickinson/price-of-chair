@@ -1,9 +1,16 @@
-{% extends "base.jinja2" %}
+{% extends 'base.jinja2' %}
 {% block content %}
-    <div class="jumbotron">
-        <h1>Pricing Service</h1>
-        <p>We scan online store websites to alert you of price drops in items that interest you.</p>
-        <p>Just sign up, and get started by adding the URL of an item that you wish to track. We'll do the rest!</p>
-        <p><a class="btn btn-primary btn-lg" href="{{ url_for('users.register_user') }}" role="button">Get started</a></p>
-    </div>
+<div class="jumbotron">
+    <h1>Pricing Alert Service</h1>
+    <p>We scan online store websites to alert you of price drops on items of interest</p>
+    <p>Sign up and get started by adding the URL of an item you want to track. We'll do the rest!</p>
+    <p>
+        {% if not session['email']%}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('users.register_user') }}" role="button">Sign Up</a>
+        <a class="btn btn-lg btn-default" href="{{ url_for('users.login_user') }}" role="button">Log in</a>
+        {% else %}
+        <a class="btn btn-primary btn-lg" href="{{ url_for('users.user_alerts') }}" role="button">My Alerts</a>
+        {% endif %}
+    </p>
+</div>
 {% endblock %}

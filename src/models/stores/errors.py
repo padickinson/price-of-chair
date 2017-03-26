@@ -1,10 +1,6 @@
-__author__ = 'jslvtr'
-
-
-class StoreException(Exception):
+class StoreError(Exception):
     def __init__(self, message):
         self.message = message
 
-
-class StoreNotFoundException(StoreException):
+class StoreNotFoundError(StoreError):
     pass
