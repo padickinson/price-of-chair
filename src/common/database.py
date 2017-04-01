@@ -7,15 +7,15 @@ __author__ = 'padickinson'
 
 class Database(object):
     # static class properties
-    URI = os.environ.get("MONGOLAB_URI")
+    URI = os.environ.get("MONGODB_URI")
     # mongodb://<dbuser>:<dbpassword>@ds143340.mlab.com:43340/heroku_b8cxdkz8
     DATABASE = None
 
     @staticmethod
     def initialize():
         client = pymongo.MongoClient(Database.URI)
-        #Database.DATABASE = client.get_default_database()
-        Database.DATABASE = client['heroku_b8cxdkz8']
+        Database.DATABASE = client.get_default_database()
+        #Database.DATABASE = client['heroku_b8cxdkz8']
 
     @staticmethod
     def insert(collection, data):
