@@ -1,3 +1,5 @@
+import os
+
 import pymongo
 
 __author__ = 'padickinson'
@@ -5,7 +7,8 @@ __author__ = 'padickinson'
 
 class Database(object):
     # static class properties
-    URI = 'mongodb://127.0.0.1:27017'
+    URI = os.environ.get("MONGOLAB_URI")
+    # mongodb://<dbuser>:<dbpassword>@ds143340.mlab.com:43340/heroku_b8cxdkz8
     DATABASE = None
 
     @staticmethod
