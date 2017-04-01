@@ -14,7 +14,8 @@ class Database(object):
     @staticmethod
     def initialize():
         client = pymongo.MongoClient(Database.URI)
-        Database.DATABASE = client.get_default_database()
+        #Database.DATABASE = client.get_default_database()
+        Database.DATABASE = client['heroku_b8cxdkz8']
 
     @staticmethod
     def insert(collection, data):
