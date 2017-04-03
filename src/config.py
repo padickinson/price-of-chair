@@ -2,7 +2,7 @@ import os
 
 __author__ = 'padickinson'
 
-DEBUG = True
+DEBUG = False
 ADMINS = frozenset([
-    os.environ.get('ADMIN_EMAIL')
+    'padickinson@gmail.com'
 ])
